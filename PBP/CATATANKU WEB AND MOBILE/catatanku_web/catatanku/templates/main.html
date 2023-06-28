@@ -9,7 +9,7 @@
 </button>
 
 
-
+<!-- Dummy button -->
 <a href="{% url 'catatanku:big_boi' %}">
     <button>
         Transaksi Baru
@@ -52,21 +52,23 @@
     </div>
 </header>
 
-<main class="container" id="list_of_notes"></main>
+<main class="container mt-4" id="list_of_notes"></main>
 
 <script>
     $(document).ready(function(){
         $.get("/json/", function(data) {
             for (ii=0; ii<data.length; ii++){
                 $('#list_of_notes').append(`
-                <div id="${data[i].id}--task" class="col-md-6 col-lg-3 mb-3">
+                <div id="${data[ii].pk}--task" class="col-md-6 col-lg-3 mb-3">
                     <div class="card d-flex">
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${data[i].fields.title}</h5>
-                            <p class="card-text">${data[i].fields.description}</p>
+                            <h5 class="card-title">${data[ii].fields.title}</h5>
+                            <p class="card-text">${data[ii].fields.description}</p>
+                            <p class="card-text">${data[ii].fields.date}</p>
+                            <p class="card-text">${data[ii].fields.time}</p>
                             <div class="mt-auto">
-                                <a href="/tracker/delete/${data[i].pk}" class="btn btn-primary delete mb-2">Hapus</a>
-                                <a href="/tracker/modify/${data[i].pk}" class="btn btn-secondary mb-2">Ubah</a>
+                                <a href="/tracker/delete/${data[ii].pk}" class="btn btn-primary delete mb-2">Hapus</a>
+                                <a href="/tracker/modify/${data[ii].pk}" class="btn btn-secondary mb-2">Ubah</a>
                             </div>
                         </div>
                     </div>
@@ -77,10 +79,11 @@
 
         $("#add_note").click(function(){
             $.post("/create/", {
-                title: "test",//$("#title").val(),
-                desctription: "test details" //$("#description").val(),
+                title: $("#title").val(),
+                description: $("#description").val(),
             },
             function(result, status){
+                console.log(status)
                 if (status == 'success'){
                     $("#list_of_notes").append(`
                     <div id="${result.id}--task" class="col-md-6 col-lg-3 mb-3">
@@ -88,6 +91,8 @@
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">${result.title}</h5>
                                 <p class="card-text">${result.description}</p>
+                                <p class="card-text">${result.date}</p>
+                                <p class="card-text">${result.time}</p>
                                 <div class="mt-auto">
                                     <a href="/tracker/delete/${result.id}" class="btn btn-primary delete mb-2">Hapus</a>
                                     <a href="/tracker/modify/${result.id}" class="btn btn-secondary mb-2">Ubah</a>

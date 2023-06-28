@@ -50,7 +50,12 @@ def create_note(request):
             'id':data.id,
             'title':data.title,
             'description':data.description,
+            'date': data.date,
+            'time': data.time,
         }
         return JsonResponse(result)
     
-    return JsonResponse({'error': 'Invalid request'})
+    context = {'form': form}
+    return render(request, "create.html", context)
+    
+    #return JsonResponse({'error': 'Invalid request'})
