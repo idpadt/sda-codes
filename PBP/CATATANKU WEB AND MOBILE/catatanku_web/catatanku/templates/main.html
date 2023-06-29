@@ -2,19 +2,150 @@
 
 {% block content %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $.get("/json/", function(data) {
+            for (ii=0; ii<data.length; ii++){
+                $('#list_of_notes').append(`
+                <div id="${data[ii].pk}" class="col-md-6 col-lg-4 mb-3">
+                    <div class="card d-flex">
+                        <div class="card-body d-flex flex-column">
+                            <h5 id="${data[ii].pk}-title" class="card-title">${data[ii].fields.title}</h5>
+                            <p hidden id="${data[ii].pk}-description" class="card-description">${data[ii].fields.description}</p>
+                            <p class="card-text">${data[ii].fields.date}</p>
+                            <p class="card-text">${data[ii].fields.time}</p>
+                            <div class="row justify-content-end">
+                                <div class="col-3">
+                                    <button id="modify--${data[ii].pk}" class="btn btn-outline-info">Details</button>
+                                </div>
+                                <div class="col-3">
+                                    <button onclick="deleteNote(${data[ii].pk})" class="btn btn-outline-danger">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `)
+            }
+        });
+
+        //href="/modify/${data[ii].pk}
+        //<a href="/delete/${data[ii].pk}" class="btn btn-danger delete mb-2">
+        //<button id="delete--${data[ii].pk}" onClick="deteleNote(${data[ii].pk})" class="btn btn-danger delete mb-2">
+
+        $("#add_note").click(function(){
+            $.post("/create/", {
+                title: $("#title").val(),
+                description: $("#description").val(),
+            },
+            function(result, status){
+                if (status == 'success'){
+                    $("#list_of_notes").append(`
+                    <div id="${result.id}" class="col-md-6 col-lg-4 mb-3">
+                    <div class="card d-flex">
+                        <div class="card-body d-flex flex-column">
+                            <h5 id="${result.id}-title" class="card-title">${result.title}</h5>
+                            <p hidden id="${result.id}-description" class="card-description">${result.description}</p>
+                            <p class="card-text">${result.date}</p>
+                            <p class="card-text">${result.time}</p>
+                            <div class="row justify-content-end">
+                                <div class="col-3">
+                                    <button id="modify--${result.id}" class="btn btn-outline-info">Details</button>
+                                </div>
+                                <div class="col-3">
+                                    <button onclick="deleteNote(${result.id})" class="btn btn-outline-danger">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    `);
+                $('#title').val('')
+                $('#description').val('')
+                }
+            })
+        });
+
+        $(document).on('click', 'button[id^="modify--"]', function(event){
+            event.preventDefault();
+            var id = $(this).closest('.card').parent().attr('id');
+            var title = $(this).closest('.card').find('.card-title').text();
+            var description = $(this).closest('.card').find('.card-description').text();
+
+            $('#detail_id').text(id);
+            $('#detail_title').text(title);
+            $('#detail_description').text(description);
+            $('#detail_modal').modal('show');
+        });
+
+        $('#edit_button').click(function(){
+            event.preventDefault();
+            var id = $(this).parent().parent().find('#detail_id').text();
+            var title = $(this).parent().parent().find('#detail_title').text();
+            var description = $(this).parent().parent().find('#detail_description').text();
+
+            $('#edit_id').text(id);
+            $('#edit_title').val(title);
+            $('#edit_description').val(description);
+        });
+
+    });
+
+    function deleteNote(id) {
+        $.ajax({
+            url: '{% url "catatanku:delete" %}',
+            data: {
+                'id': id,
+            },
+            dataType: 'json',
+            success: function (data) {
+                if (data.deleted) {
+                $("#list_of_notes #" + id).remove();
+                }
+            }
+        });
+    }
+
+    function editNote(){
+        console.log('editNote function called');
+
+        var id = $('#edit_id').text().trim();
+        var newTitle = $('#edit_title').val().trim();
+        var newDescription = $('#edit_description').val().trim();
+
+        console.log('id:', id);
+        console.log('newTitle:', newTitle);
+        console.log('newDescription:', newDescription);
+
+        $.ajax({
+            url: '{% url "catatanku:edit" %}',
+            data: {
+                'id': id,
+                'title': newTitle,
+                'description': newDescription,
+            },
+            dataType: 'json',
+            success: function(data) {
+                console.log('AJAX success:', data);
+                if (data.edited) {
+                    $("#" + id + "-title").text(newTitle);
+                    $("#" + id + "-description").text(newDescription);
+                    $("#detail_title").text(newTitle);
+                    $("#detail_description").text(newDescription);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                console.log('AJAX error:', errorThrown);
+            }
+        });
+    }
+    
+</script>
 
 <!-- Button for form modal -->
-<button type="button" class="btn btn-outline-light position-fixed bottom-0 end-0 mb-3 me-3 fs-5" data-bs-toggle="modal" data-bs-target="#form_modal">
+<button type="button" class="btn btn-outline-light sticky-bottom position-fixed end-0 mb-3 me-3 fs-5 bg-dark" data-bs-toggle="modal" data-bs-target="#form_modal">
     New Note
 </button>
-
-
-<!-- Dummy button -->
-<a href="{% url 'catatanku:big_boi' %}">
-    <button>
-        Transaksi Baru
-    </button>
-</a>
 
 <!-- Form Modal -->
 <div class="modal fade" id="form_modal" data-bs-backdrop="static">
@@ -25,17 +156,15 @@
                 <button type="button" class=" btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body mx-3 border-bottom-0">
-                <!--<form method="POST">-->
                     {% csrf_token %}
                     <div class="mb-0">
                         <label for="title" class="col-form-label">Title:</label>
-                        <input type="text" class="form-control" id="title" name="title"></input>
+                        <input type="text" class="form-control" id="title" name="title"></input>    
                     </div>
                     <div class="mb-0">
                         <label for="description" class="col-form-label">Desctiption:</label>
                         <textarea class="form-control" id="description" name="description"></textarea>
                     </div>
-                <!--</form>-->
             </div>
             <div class="modal-footer mx-3 border-top-0">
                 <button type="submit" class="btn btn-outline-light" id="add_note" data-bs-dismiss="modal">Add note</button>
@@ -44,7 +173,8 @@
     </div>
 </div>
 
-<header class="container text-center py-3 border-bottom" >
+<!-- WebSite Header -->
+<header class="container-fluid text-center sticky-top py-3 border-bottom bg-dark" >
     <div class="row">
         <div class="col">
             <div class="h2">Catatanku!</div>
@@ -52,14 +182,64 @@
     </div>
 </header>
 
-<main class="container mt-4" id="list_of_notes"></main>
+<!-- Main Body contains List of Notes as Cards -->
+<main class="row m-3" id="list_of_notes"></main>
 
+<!-- Detail Modal -->
+<div class="modal fade" id="detail_modal">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header border-bottom-1 mx-3 pb-1">
+                <h5 class="modal-title" id="detail_title"></h5>
+                <h5 hidden id="detail_id"></h5>
+            <button type="button" class=" btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body mx-3 border-bottom-0">
+                <div class="mb-0">
+                    <p id="detail_description"></p>  
+                </div>
+            </div>
+        <div class="modal-footer mx-3">
+          <button type="button" class="btn btn-outline-light" id="edit_button" data-bs-toggle="modal" data-bs-target="#edit_modal">Edit</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="edit_modal" data-bs-backdrop="static">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-3 shadow">
+        <div class="modal-header border-bottom-1 mx-3 pb-1">
+          <h5 class="modal-title">Edit Note</h5>
+        </div>
+        <div class="modal-body mx-3 border-bottom-0">
+          <form id="modifyForm">
+            <div class="form-group">
+              <label for="modifyTitle">Title:</label>
+              <input type="text" class="form-control" id="edit_title"></input>
+              <label for="modifyDescription">Description:</label>
+              <textarea type="text" class="form-control" id="edit_description"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer mx-3 border-top-0">
+          <p hidden id="edit_id"></p>
+          <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#detail_modal">Cancel</button>
+          <button type="button" class="btn btn-outline-danger" id="edit_submit" onclick="editNote()" data-bs-toggle="modal" data-bs-target="#detail_modal">Submit</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+<!--
 <script>
     $(document).ready(function(){
         $.get("/json/", function(data) {
             for (ii=0; ii<data.length; ii++){
                 $('#list_of_notes').append(`
-                <div id="${data[ii].pk}--task" class="col-md-6 col-lg-3 mb-3">
+                <div id="${data[ii].pk}--task" class="col-md-6 col-lg-6 mb-3">
                     <div class="card d-flex">
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">${data[ii].fields.title}</h5>
@@ -86,7 +266,7 @@
                 console.log(status)
                 if (status == 'success'){
                     $("#list_of_notes").append(`
-                    <div id="${result.id}--task" class="col-md-6 col-lg-3 mb-3">
+                    <div id="${result.id}--task" class="col-md-6 col-lg-6 mb-3">
                         <div class="card d-flex">
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">${result.title}</h5>
@@ -108,5 +288,7 @@
         })
     })
 </script>
+-->
+
 
 {% endblock content %}

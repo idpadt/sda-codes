@@ -1,7 +1,10 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 import 'note.dart';
+import 'add_note.dart';
+import 'note_detail.dart';
 
 void main() {
   runApp(const Catatanku());
@@ -13,10 +16,17 @@ class Catatanku extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title:"Catatanku",
       theme: ThemeData(
         useMaterial3: true,
       ),
-      home: MainPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const MainPage(),
+        '/add_note': (context) => const AddNote(),
+        '/note_detail': (context) => const NoteDetail(),
+      },
+      //home: MainPage(),
     );
   }
 }
@@ -34,7 +44,9 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: (){},
+        onPressed: (){
+          Navigator.pushNamed(context, '/add_note');
+        },
         child: Icon(Icons.add), 
       ),
       appBar: AppBar(
@@ -46,7 +58,12 @@ class _MainPageState extends State<MainPage> {
           padding: const EdgeInsets.all(8),
           itemCount: templateNotes.length,
           itemBuilder: (BuildContext context, int index) {
-            return NoteCard(note: templateNotes[index]);
+            return NoteCard(
+              note: templateNotes[index],
+              onTap: (){
+                Navigator.pushNamed(context, '/note_detail');
+              },
+            );
           },
           
           //separatorBuilder: (BuildContext context, int index) => const Divider(),
@@ -81,9 +98,10 @@ List<Note> templateNotes = [Note(title: "sfgsdfgsdgfsdgsdfgdsgfsfgsdfgsdgfsdgsdf
 List<Note> listOfNotes = [];
 
 class NoteCard extends StatefulWidget {
-  NoteCard({super.key, required this.note});
+  NoteCard({super.key, required this.note, required this.onTap});
 
   Note note;
+  final GestureTapCallback? onTap;
 
   @override
   State<NoteCard> createState() => _NoteCardState();
@@ -96,6 +114,8 @@ class _NoteCardState extends State<NoteCard> {
 
     String? title = widget.note.title;
     String? description = widget.note.description;
+    //final GestureTapCallback? onTap;
+
 
     return Center(
       child: Card(
@@ -106,7 +126,7 @@ class _NoteCardState extends State<NoteCard> {
         clipBehavior: Clip.hardEdge,
         child: InkWell(
           splashColor: Colors.blue.withAlpha(30),
-          onTap: () {},
+          onTap: widget.onTap,
           child: SizedBox(
             //width: 300,
             //height: 50,
