@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from catatanku.models import Notes
 from catatanku.forms import NotesForm
@@ -29,10 +30,6 @@ class Edit(View):
         selectedId = request.GET.get('id', None)
         newTitle = request.GET.get('title', None)
         newDescription = request.GET.get('description', None)
-
-        print("selectedId:", selectedId)
-        print("newTitle:", newTitle)
-        print("newDescription:", newDescription)
 
         updatedNote = Notes.objects.get(id=selectedId)
         updatedNote.title = newTitle
@@ -77,5 +74,43 @@ def create_note(request):
     
     context = {'form': form}
     return render(request, "create.html", context)
-    
-    #return JsonResponse({'error': 'Invalid request'})
+
+@csrf_exempt
+def create_note_flutter(request):
+    if request.method == 'POST':
+
+        data = json.loads(request.body)
+
+        new_note = Notes.objects.create(
+            title = data["title"],
+            description = data["description"]
+        )
+
+        new_note.save()
+
+        return JsonResponse({"status": "success"}, status=200)
+    else:
+        return JsonResponse({"status": "error"}, status=401)
+
+@csrf_exempt
+def delete_note_flutter(request, id):
+    if request.method == 'DELETE':
+        selectedId = id
+        Notes.objects.get(id=selectedId).delete()
+        return JsonResponse({"status": "success"}, status = 200)
+    else:
+        return JsonResponse({"status": "error"}, status=401)
+
+@csrf_exempt
+def edit_note_flutter(request, id):
+    if request.method == 'PUT':
+        selectedId = id
+        data = json.loads(request.body)
+
+        updatedNote = Notes.objects.get(id=selectedId)
+        updatedNote.title = data["title"]
+        updatedNote.description = data["description"]
+        updatedNote.save()
+        return JsonResponse({"status": "success"}, status = 200)
+    else:
+        return JsonResponse({"status": "error"}, status=401)

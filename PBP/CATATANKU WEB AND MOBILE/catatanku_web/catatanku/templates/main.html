@@ -107,15 +107,10 @@
     }
 
     function editNote(){
-        console.log('editNote function called');
 
         var id = $('#edit_id').text().trim();
         var newTitle = $('#edit_title').val().trim();
         var newDescription = $('#edit_description').val().trim();
-
-        console.log('id:', id);
-        console.log('newTitle:', newTitle);
-        console.log('newDescription:', newDescription);
 
         $.ajax({
             url: '{% url "catatanku:edit" %}',
@@ -126,7 +121,6 @@
             },
             dataType: 'json',
             success: function(data) {
-                console.log('AJAX success:', data);
                 if (data.edited) {
                     $("#" + id + "-title").text(newTitle);
                     $("#" + id + "-description").text(newDescription);
