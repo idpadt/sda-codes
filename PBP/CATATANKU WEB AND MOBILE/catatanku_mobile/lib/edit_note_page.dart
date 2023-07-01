@@ -118,8 +118,8 @@ class _EditNotePageState extends State<EditNotePage> {
                                 content: Text("You edited a note!"),
                               ),
                             );
-                            // widget.function();
-                            Navigator.pop(context, notes); // Navigate back to the previous page
+                            // widget.function(); //refresh after edit function
+                            Navigator.pop(context, notes);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
